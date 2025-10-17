@@ -1,0 +1,6 @@
+__pycache__
+.archive
+.venv
+.vscode
+models
+logs
