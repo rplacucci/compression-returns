@@ -31,7 +31,6 @@ parser.add_argument("--warmup_ratio", type=float, default=0.1, help="Initial fra
 parser.add_argument("--label_smoothing", type=float, default=0.0, help="Label smoothing factor for cross-entropy loss")
 parser.add_argument("--n_epochs", type=int, default=5, help="Number of training epochs")
 parser.add_argument("--seed", type=int, default=42, help="Random seed for experiments")
-
 args = parser.parse_args()
 
 checkpoint = args.checkpoint
@@ -48,7 +47,7 @@ n_epochs = args.n_epochs
 seed = args.seed
 
 # Config directories
-run_id = f"{checkpoint}-{task_name}-seed-{seed}"
+run_id = f"{checkpoint}-{task_name}-lr-{lr:.0e}-batch_size-{batch_size}-grad_accum_steps-{grad_accum_steps}-warmup_ratio-{warmup_ratio}-label_smoothing-{label_smoothing}-n_epochs-{n_epochs}-seed-{seed}"
 
 log_dir = f"./logs/{task_name}"
 os.makedirs(log_dir, exist_ok=True)
