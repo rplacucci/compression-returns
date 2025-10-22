@@ -26,6 +26,7 @@ parser.add_argument("--betas", nargs=2, type=float, default=(0.9, 0.999), help="
 parser.add_argument("--eps", type=float, default=1e-6, help="Constant to stabilize division in the optimizer update rule")
 parser.add_argument("--weight_decay", type=float, default=1e-2, help="Weight decay for the optimizer")
 parser.add_argument("--batch_size", type=int, default=32, help="Size of batch to train with")
+parser.add_argument("--grad_accum_steps", type=int, default=1, help="Number of gradient accumulation steps")
 parser.add_argument("--warmup_ratio", type=float, default=0.1, help="Initial fraction of training steps with linear LR warmup")
 parser.add_argument("--label_smoothing", type=float, default=0.0, help="Label smoothing factor for cross-entropy loss")
 parser.add_argument("--n_epochs", type=int, default=5, help="Number of training epochs")
@@ -40,6 +41,7 @@ betas = args.betas
 eps = args.eps
 weight_decay = args.weight_decay
 batch_size = args.batch_size
+grad_accum_steps = args.grad_accum_steps
 warmup_ratio = args.warmup_ratio
 label_smoothing = args.label_smoothing
 n_epochs = args.n_epochs
@@ -137,44 +139,49 @@ scheduler = get_scheduler(
 )
 
 # Begin training
+accelerator.print(f"Begin training with an effective batch size of {batch_size * grad_accum_steps}...")
 log_steps = 10
 step = 0
 for epoch in range(n_epochs):
     model.train()
-    for batch in train_dataloader:
+    for batch_idx, batch in enumerate(train_dataloader):
         start = time.time()
 
-        outputs = model(**batch)
-        loss = outputs.loss
+        with accelerator.accumulate(model):
+            outputs = model(**batch)
+            loss = outputs.loss / grad_accum_steps
 
-        accelerator.backward(loss)
-        norm = accelerator.clip_grad_norm_(model.parameters(), 1.0)
+            accelerator.backward(loss)
 
-        optimizer.step()
-        scheduler.step()
-        optimizer.zero_grad()
+            if (batch_idx + 1) % grad_accum_steps == 0 or (batch_idx + 1) == len(train_dataloader):
+                norm = accelerator.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+                scheduler.step()
+                optimizer.zero_grad()
+                step += 1
 
         torch.cuda.synchronize()
         elapsed = time.time() - start
         max_len = batch["input_ids"].shape[1]
         tokens_per_sec = int(batch_size * max_len * world_size / elapsed) if elapsed > 0 else 0
 
-        # Log to tensorboard
-        step += 1
-        loss = loss.detach().item()
-        lr = scheduler.get_last_lr()[0]
-        if step % log_steps == 0:
-            accelerator.log(
-                {
-                    "loss": loss,
-                    "grad_norm": norm,
-                    "lr": lr,
-                },
-                step=step,
-            )
+        if (batch_idx + 1) % grad_accum_steps == 0 or (batch_idx + 1) == len(train_dataloader):
+            loss = loss.detach().item() * grad_accum_steps
+            lr = scheduler.get_last_lr()[0]
+            
+            # Log to tensorboard
+            if step % log_steps == 0:
+                accelerator.log(
+                    {
+                        "loss": loss,
+                        "grad_norm": norm,
+                        "lr": lr,
+                    },
+                    step=step,
+                )
 
-        # Print to terminal
-        accelerator.print(f"(train) epoch: {epoch:2d} | step: {step:4d} | loss: {loss:.4f} | lr: {lr:.4e} | norm: {norm:.4f} | tok/sec: {tokens_per_sec:,}")
+            # Print to terminal
+            accelerator.print(f"(train) epoch: {epoch:2d} | step: {step:4d} | loss: {loss:.4f} | lr: {lr:.4e} | norm: {norm:.4f} | tok/sec: {tokens_per_sec:,}")
 
     model.eval()
     for batch in valid_dataloader:
