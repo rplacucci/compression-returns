@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from datasets import load_dataset
 from transformers import BertForSequenceClassification, BertTokenizer, DataCollatorWithPadding, logging, get_scheduler
-from .utils import tokenize_fn, postprocess_fn, loss_fn
+from .utils import tokenize_fn, postprocess_fn
 
 # accelerate launch -m src.tune 
 
@@ -66,11 +66,12 @@ if torch.cuda.is_available():
 accelerator = Accelerator(
     log_with=["tensorboard"],
     project_dir=log_dir,
-    device_placement=True
+    device_placement=True,
+    gradient_accumulation_steps=grad_accum_steps
 )
 accelerator.init_trackers(run_id)
 world_size = accelerator.num_processes
-accelerator.print(f"Initialized {accelerator.__class__.__name__} with {world_size} distributed processes")
+accelerator.print(f"Initialized {accelerator.__class__.__name__} with {world_size} distributed processes and {grad_accum_steps} gradient accumulation steps")
 
 # Set seeds for reproducibility
 torch.manual_seed(seed)
@@ -158,11 +159,10 @@ for epoch in range(n_epochs):
             else:
                 loss = outputs.loss
 
-            loss = loss / grad_accum_steps
-
             accelerator.backward(loss)
-
-            if (batch_idx + 1) % grad_accum_steps == 0 or (batch_idx + 1) == len(train_dataloader):
+            
+            # Only step optimizer when accumulation is complete
+            if accelerator.sync_gradients:
                 norm = accelerator.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step()
                 scheduler.step()
@@ -171,19 +171,21 @@ for epoch in range(n_epochs):
 
         if torch.cuda.is_available():
             torch.cuda.synchronize()
+            
         elapsed = time.time() - start
         max_len = batch["input_ids"].shape[1]
         tokens_per_sec = int(batch_size * max_len * world_size / elapsed) if elapsed > 0 else 0
 
-        if (batch_idx + 1) % grad_accum_steps == 0 or (batch_idx + 1) == len(train_dataloader):
-            loss = loss.detach().item() * grad_accum_steps
+        # Only log when gradients are synchronized (i.e., after accumulation steps)
+        if accelerator.sync_gradients:
+            loss_item = loss.detach().item()
             lr = scheduler.get_last_lr()[0]
             
             # Log to tensorboard
             if step % log_steps == 0:
                 accelerator.log(
                     {
-                        "loss": loss,
+                        "loss": loss_item,
                         "grad_norm": norm,
                         "lr": lr,
                     },
@@ -191,7 +193,7 @@ for epoch in range(n_epochs):
                 )
 
             # Print to terminal
-            accelerator.print(f"(train) epoch: {epoch:2d} | step: {step:4d} | loss: {loss:.4f} | lr: {lr:.4e} | norm: {norm:.4f} | tok/sec: {tokens_per_sec:,}")
+            accelerator.print(f"(train) epoch: {epoch:2d} | step: {step:4d} | loss: {loss_item:.4f} | lr: {lr:.4e} | norm: {norm:.4f} | tok/sec: {tokens_per_sec:,}")
 
     model.eval()
     for batch in valid_dataloader:
