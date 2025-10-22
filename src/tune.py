@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from datasets import load_dataset
 from transformers import BertForSequenceClassification, BertTokenizer, DataCollatorWithPadding, logging, get_scheduler
-from .utils import tokenize_fn, postprocess_fn
+from .utils import tokenize_fn, postprocess_fn, loss_fn
 
 # accelerate launch -m src.tune 
 
@@ -95,7 +95,7 @@ accelerator.print(f"Loaded {model.__class__.__name__} with {num_labels} labels a
 
 # Load dataset
 ds = load_dataset(f"fancyzhx/{task_name}")
-accelerator.print(f"Loaded {task_name} with {len(ds["train"]):,} train and {len(ds["test"]):,} test examples")
+accelerator.print(f"Loaded {task_name} with {len(ds['train']):,} train and {len(ds['test']):,} test examples")
 
 dataset = ds.map(tokenize_fn, batched=True, fn_kwargs={"task_name": task_name, "tokenizer": tokenizer})
 dataset = postprocess_fn(dataset, task_name)
@@ -104,14 +104,14 @@ dataset = postprocess_fn(dataset, task_name)
 collate_fn = DataCollatorWithPadding(tokenizer=tokenizer)
 
 train_dataloader = DataLoader(
-    dataset=dataset["train"],
+    dataset=dataset['train'],
     batch_size=batch_size,
     shuffle=True,
     collate_fn=collate_fn
 )
 
 valid_dataloader = DataLoader(
-    dataset=dataset["test"],
+    dataset=dataset['test'],
     batch_size=batch_size,
     shuffle=False,
     collate_fn=collate_fn
@@ -121,7 +121,7 @@ valid_dataloader = DataLoader(
 metric = evaluate.combine(["accuracy", "f1"])
 
 # Config optimizer and distributed learning
-optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=betas, eps=eps)
+optimizer = torch.optim.AdamW(model.parameters(), lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
 
 # Prepare distributed learning
 train_dataloader, valid_dataloader, model, optimizer = accelerator.prepare(
@@ -138,6 +138,9 @@ scheduler = get_scheduler(
     num_warmup_steps=warmup_steps
 )
 
+# Config loss function
+criterion = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+
 # Begin training
 accelerator.print(f"Begin training with an effective batch size of {batch_size * grad_accum_steps}...")
 log_steps = 10
@@ -149,7 +152,13 @@ for epoch in range(n_epochs):
 
         with accelerator.accumulate(model):
             outputs = model(**batch)
-            loss = outputs.loss / grad_accum_steps
+            
+            if label_smoothing > 0.0:
+                loss = criterion(outputs.logits, batch['labels'])
+            else:
+                loss = outputs.loss
+
+            loss = loss / grad_accum_steps
 
             accelerator.backward(loss)
 
@@ -160,7 +169,8 @@ for epoch in range(n_epochs):
                 optimizer.zero_grad()
                 step += 1
 
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         elapsed = time.time() - start
         max_len = batch["input_ids"].shape[1]
         tokens_per_sec = int(batch_size * max_len * world_size / elapsed) if elapsed > 0 else 0
