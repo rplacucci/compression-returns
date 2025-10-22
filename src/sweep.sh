@@ -14,6 +14,7 @@ if [[ "$SWEEP" == "ag-base" || "$SWEEP" == "all" ]]; then
 				--checkpoint bert-base-uncased \
 				--task_name ag_news \
 				--lr "${LR}" \
+				--batch_size 32 \
 				--grad_accum_steps 4 \
 				--warmup_ratio "${WU}" \
 				--label_smoothing 0.05 \
@@ -53,7 +54,8 @@ if [[ "$SWEEP" == "db-base" || "$SWEEP" == "all" ]]; then
 				--checkpoint bert-base-uncased \
 				--task_name dbpedia_14 \
 				--lr "${LR}" \
-				--grad_accum_steps 8 \
+				--batch_size 32 \
+				--grad_accum_steps 4 \
 				--warmup_ratio "${WU}" \
 				--label_smoothing 0.10 \
 				--n_epochs 2
