@@ -8,7 +8,7 @@ def tokenize_fn(example, task_name, tokenizer):
 
 def postprocess_fn(dataset, task_name):
     columns_to_remove = []
-    if task_name == "db_pedia":
+    if task_name == "dbpedia_14":
         columns_to_remove.extend(["title", "content"])
     elif task_name == "ag_news":
         columns_to_remove.extend(["text"])
