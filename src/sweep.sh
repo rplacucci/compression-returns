@@ -27,18 +27,18 @@ fi
 if [[ "$SWEEP" == "ag-large" || "$SWEEP" == "all" ]]; then
   	for LR in 5e-6 1e-5 1.5e-5; do
 		for WU in 0.06 0.10; do
-		echo "========================================================================================================="
-		echo " Fine-tuning on ag_news for checkpoint bert-large-uncased with lr=$LR, warmup_ratio=$WU"
-		echo "========================================================================================================="
-		accelerate launch -m src.tune \
-			--checkpoint bert-large-uncased \
-			--task_name ag_news \
-			--lr "${LR}" \
-			--batch_size 16 \
-			--grad_accum_steps 8 \
-			--warmup_ratio "${WU}" \
-			--label_smoothing 0.05 \
-			--n_epochs 3
+			echo "========================================================================================================="
+			echo " Fine-tuning on ag_news for checkpoint bert-large-uncased with lr=$LR, warmup_ratio=$WU"
+			echo "========================================================================================================="
+			accelerate launch -m src.tune \
+				--checkpoint bert-large-uncased \
+				--task_name ag_news \
+				--lr "${LR}" \
+				--batch_size 16 \
+				--grad_accum_steps 8 \
+				--warmup_ratio "${WU}" \
+				--label_smoothing 0.05 \
+				--n_epochs 3
 		done
   	done
 fi
