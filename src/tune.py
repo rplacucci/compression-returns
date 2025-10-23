@@ -118,7 +118,8 @@ valid_dataloader = DataLoader(
 )
 
 # Load evaluation metric
-metric = evaluate.combine(["accuracy", "f1"])
+acc_metric = evaluate.load("accuracy")
+f1_metric = evaluate.load("f1", average="macro")
 
 # Config optimizer and distributed learning
 optimizer = torch.optim.AdamW(model.parameters(), lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
@@ -129,7 +130,7 @@ train_dataloader, valid_dataloader, model, optimizer = accelerator.prepare(
 )
 
 # Config LR scheduler
-total_steps = n_epochs * len(train_dataloader)
+total_steps = n_epochs * len(train_dataloader) // grad_accum_steps
 warmup_steps = int(warmup_ratio * total_steps)
 scheduler = get_scheduler(
     name="linear",
@@ -205,10 +206,14 @@ for epoch in range(n_epochs):
         # Gather preds and refs across processes then add to metric
         preds = accelerator.gather_for_metrics(predictions)
         refs = accelerator.gather_for_metrics(batch["labels"])
-        metric.add_batch(predictions=preds, references=refs)
+        acc_metric.add_batch(predictions=preds, references=refs)
+        f1_metric.add_batch(predictions=preds, references=refs)
     
     # Log to tensorboard
-    scores = metric.compute()
+    acc_score = acc_metric.compute()
+    f1_score = f1_metric.compute(average="macro")
+    
+    scores = {**acc_score, **f1_score}
     accelerator.log(scores, step=epoch)
     
     # Print to terminal
