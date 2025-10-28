@@ -242,6 +242,12 @@ if accelerator.is_main_process:
     results = {
         "method": "pruning",
         "checkpoint": checkpoint,
+        "num_hidden_layers": model.config.num_hidden_layers,
+        "hidden_size": model.config.hidden_size,
+        "num_attention_heads": model.config.num_attention_heads,
+        "intermediate_size": model.config.intermediate_size,
+        "max_position_embeddings": model.config.max_position_embeddings,
+        "vocab_size": model.config.vocab_size,
         "task_name": task_name,
         "seed": seed,
         "sparsity_target": sparsity,
