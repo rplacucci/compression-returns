@@ -8,7 +8,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from datasets import load_dataset
-from transformers import BertForSequenceClassification, BertTokenizer, DataCollatorWithPadding, logging, get_scheduler
+from transformers import AutoModel, AutoTokenizer, DataCollatorWithPadding, logging, get_scheduler
 from .utils import tokenize_fn, postprocess_fn
 
 # accelerate launch -m src.tune 
@@ -78,7 +78,7 @@ torch.cuda.manual_seed(seed)
 torch.set_float32_matmul_precision("high")
 
 # Config tokenizer
-tokenizer = BertTokenizer.from_pretrained(checkpoint)
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 vocab_size = tokenizer.vocab_size
 accelerator.print(f"Loaded {tokenizer.__class__.__name__} with vocab size {vocab_size:,}")
 
@@ -90,7 +90,7 @@ elif task_name == "dbpedia_14":
 else:
     raise NotImplementedError(f"Task '{task_name}' is not supported")
 
-model = BertForSequenceClassification.from_pretrained(checkpoint, num_labels=num_labels)
+model = AutoModel.from_pretrained(checkpoint, num_labels=num_labels)
 accelerator.print(f"Loaded {model.__class__.__name__} with {num_labels} labels and {sum(p.numel() for p in model.parameters() if p.requires_grad):,} trainable parameters")
 
 # Load dataset
