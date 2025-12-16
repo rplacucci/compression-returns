@@ -1,0 +1,41 @@
+ag_news:
+  # Train-time knobs (task-level)
+  label_smoothing_factor: [0.0, 0.05]
+  num_train_epochs: [3]
+  effective_batch_size: [128, 256]
+
+  # Optimizer schedule (by hidden size)
+  by_hidden_size:
+    H128:
+      learning_rate: [3e-4, 1e-4, 5e-5]
+      warmup_ratio: [0.06, 0.10]
+    H256:
+      learning_rate: [2e-4, 1e-4, 5e-5]
+      warmup_ratio: [0.06, 0.10]
+    H512:
+      learning_rate: [1e-4, 5e-5, 3e-5]
+      warmup_ratio: [0.06, 0.10]
+    H768:
+      learning_rate: [5e-5, 3e-5, 2e-5]
+      warmup_ratio: [0.06, 0.10]
+
+dbpedia_14:
+  # Train-time knobs (task-level)
+  label_smoothing_factor: [0.0, 0.05, 0.10]
+  num_train_epochs: [2]
+  effective_batch_size: [256, 384]
+
+  # Optimizer schedule (by hidden size)
+  by_hidden_size:
+    H128:
+      learning_rate: [2e-4, 1e-4, 5e-5]
+      warmup_ratio: [0.06, 0.10]
+    H256:
+      learning_rate: [1e-4, 5e-5, 3e-5]
+      warmup_ratio: [0.06, 0.10]
+    H512:
+      learning_rate: [5e-5, 3e-5, 2e-5]
+      warmup_ratio: [0.06, 0.10]
+    H768:
+      learning_rate: [3e-5, 2e-5, 1e-5]
+      warmup_ratio: [0.06, 0.10]

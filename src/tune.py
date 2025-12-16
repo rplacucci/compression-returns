@@ -47,7 +47,7 @@ n_epochs = args.n_epochs
 seed = args.seed
 
 # Config directories
-run_id = f"{checkpoint}-{task_name}-lr-{lr:.0e}-batch_size-{batch_size}-grad_accum_steps-{grad_accum_steps}-warmup_ratio-{warmup_ratio:.2f}-label_smoothing-{label_smoothing:.2f}-n_epochs-{n_epochs}-seed-{seed:02d}"
+run_id = f"{checkpoint}-{task_name}-lr-{lr:.0e}-batch_size-{batch_size:02d}-grad_accum_steps-{grad_accum_steps:02d}-warmup_ratio-{warmup_ratio:.2f}-label_smoothing-{label_smoothing:.2f}-n_epochs-{n_epochs}-seed-{seed:02d}"
 
 log_dir = f"./logs/{task_name}"
 os.makedirs(log_dir, exist_ok=True)
