@@ -48,7 +48,8 @@ n_epochs = args.n_epochs
 seed = args.seed
 
 # Config directories
-run_id = f"{checkpoint}-{task_name}-lr-{lr:.0e}-batch_size-{batch_size:02d}-grad_accum_steps-{grad_accum_steps:02d}-warmup_ratio-{warmup_ratio:.2f}-label_smoothing-{label_smoothing:.2f}-n_epochs-{n_epochs}-seed-{seed:02d}"
+checkpoint_name = checkpoint.replace("google/", "")
+run_id = f"{checkpoint_name}-{task_name}-lr-{lr:.0e}-batch_size-{batch_size:02d}-grad_accum_steps-{grad_accum_steps:02d}-warmup_ratio-{warmup_ratio:.2f}-label_smoothing-{label_smoothing:.2f}-n_epochs-{n_epochs}-seed-{seed:02d}"
 
 log_dir = f"./logs/{task_name}"
 os.makedirs(log_dir, exist_ok=True)
@@ -114,10 +115,10 @@ train_dataloader = DataLoader(
     batch_size=batch_size,
     shuffle=True,
     collate_fn=collate_fn,
-    num_workers=8,
+    num_workers=0,
     pin_memory=True,
-    persistent_workers=True,
-    prefetch_factor=4
+    persistent_workers=False,
+    prefetch_factor=None
 )
 
 valid_dataloader = DataLoader(
@@ -125,10 +126,10 @@ valid_dataloader = DataLoader(
     batch_size=batch_size,
     shuffle=False,
     collate_fn=collate_fn,
-    num_workers=8,
+    num_workers=0,
     pin_memory=True,
-    persistent_workers=True,
-    prefetch_factor=4
+    persistent_workers=False,
+    prefetch_factor=None
 )
 
 # Load evaluation metric
