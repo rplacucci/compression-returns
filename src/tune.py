@@ -1,4 +1,5 @@
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import time
 import argparse
 import torch
@@ -8,7 +9,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from datasets import load_dataset
-from transformers import AutoModel, AutoTokenizer, DataCollatorWithPadding, logging, get_scheduler
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding, logging, get_scheduler
 from .utils import tokenize_fn, postprocess_fn
 
 # accelerate launch -m src.tune 
@@ -66,7 +67,8 @@ accelerator = Accelerator(
     log_with=["tensorboard"],
     project_dir=log_dir,
     device_placement=True,
-    gradient_accumulation_steps=grad_accum_steps
+    gradient_accumulation_steps=grad_accum_steps,
+    mixed_precision="bf16"
 )
 accelerator.init_trackers(run_id)
 world_size = accelerator.num_processes
@@ -75,6 +77,10 @@ accelerator.print(f"Initialized {accelerator.__class__.__name__} with {world_siz
 # Set seeds for reproducibility
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
+
+# Enable TF32
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 torch.set_float32_matmul_precision("high")
 
 # Config tokenizer
@@ -90,7 +96,7 @@ elif task_name == "dbpedia_14":
 else:
     raise NotImplementedError(f"Task '{task_name}' is not supported")
 
-model = AutoModel.from_pretrained(checkpoint, num_labels=num_labels)
+model = AutoModelForSequenceClassification.from_pretrained(checkpoint, num_labels=num_labels)
 accelerator.print(f"Loaded {model.__class__.__name__} with {num_labels} labels and {sum(p.numel() for p in model.parameters() if p.requires_grad):,} trainable parameters")
 
 # Load dataset
@@ -107,14 +113,22 @@ train_dataloader = DataLoader(
     dataset=dataset['train'],
     batch_size=batch_size,
     shuffle=True,
-    collate_fn=collate_fn
+    collate_fn=collate_fn,
+    num_workers=8,
+    pin_memory=True,
+    persistent_workers=True,
+    prefetch_factor=4
 )
 
 valid_dataloader = DataLoader(
     dataset=dataset['test'],
     batch_size=batch_size,
     shuffle=False,
-    collate_fn=collate_fn
+    collate_fn=collate_fn,
+    num_workers=8,
+    pin_memory=True,
+    persistent_workers=True,
+    prefetch_factor=4
 )
 
 # Load evaluation metric
