@@ -8,18 +8,18 @@ from itertools import product
 def default_per_device_bs(hidden_size: int) -> int:
     # Heuristics that fit typical memory for BERT-miniatures
     if hidden_size <= 256:
-        return 32
+        return 128
     if hidden_size <= 512:
-        return 16
-    return 8
+        return 64
+    return 32
 
-def derive_grad_accum(effective_bs: int, per_device_bs: int, num_devices: int=4) -> int:
+def derive_grad_accum(effective_bs: int, per_device_bs: int, num_devices: int=1) -> int:
     denom = per_device_bs * max(1, num_devices)
     return max(1, math.ceil(effective_bs / denom))
 
 # Config argparser
 parser = argparse.ArgumentParser(description="Launch BERT fine-tuning sweep with accelerate")
-parser.add_argument("--task_name", type=str, choices=["ag_news", "dpbedia_14"], help="Name of downstream task")
+parser.add_argument("--task_name", type=str, choices=["ag_news", "dbpedia_14"], help="Name of downstream task")
 parser.add_argument("--sweep_yaml", type=str, default="./configs/sweeps.yaml", help="Path to sweep config YAML")
 args = parser.parse_args()
 
@@ -75,13 +75,13 @@ for L in num_hidden_layers:
                 "--lr", str(lr),
                 "--batch_size", str(pbs),
                 "--grad_accum_steps", str(derive_grad_accum(ebs, pbs)),
-                "--wamup_ratio", str(wu),
+                "--warmup_ratio", str(wu),
                 "--label_smoothing", str(ls),
                 "--n_epochs", str(epochs)
             ]
 
             print(">>>", " ".join(cmd))
-            # subprocess.run(cmd, check=True)
+            subprocess.run(cmd, check=True)
             launched += 1
 
 print(f"[run_tune] Completed {launched} configuration(s).")
