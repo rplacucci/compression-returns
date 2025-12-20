@@ -1,0 +1,216 @@
+ag_news:
+  L-2_H-128_A-2:
+    lr: 3e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-2_H-256_A-4:
+    lr: 2e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.06
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-2_H-512_A-8:
+    lr: 1e-04
+    batch_size: 64
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-2_H-768_A-12:
+    lr: 5e-05
+    batch_size: 32
+    grad_accum_steps: 4
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-4_H-128_A-2:
+    lr: 3e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.10
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-4_H-256_A-4:
+    lr: 2e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-4_H-512_A-8:
+    lr: 1e-04
+    batch_size: 64
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-4_H-768_A-12:
+    lr: 5e-05
+    batch_size: 32
+    grad_accum_steps: 4
+    warmup_ratio: 0.06
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-6_H-128_A-2:
+    lr: 3e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-6_H-256_A-4:
+    lr: 1e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.06
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-6_H-512_A-8:
+    lr: 1e-04
+    batch_size: 64
+    grad_accum_steps: 4
+    warmup_ratio: 0.06
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-6_H-768_A-12:
+    lr: 5e-05
+    batch_size: 32
+    grad_accum_steps: 4
+    warmup_ratio: 0.10
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-8_H-128_A-2:
+    lr: 3e-04
+    batch_size: 128
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-8_H-256_A-4:
+    lr: 2-04
+    batch_size: 128
+    grad_accum_steps: 2
+    warmup_ratio: 0.06
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-8_H-512_A-8:
+    lr: 5e-05
+    batch_size: 64
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-8_H-768-A-12:
+    lr: 5e-05
+    batch_size: 32
+    grad_accum_steps: 4
+    warmup_ratio: 0.06
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-10_H-128_A-2:
+    lr: 3e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-10_H-256_A-4:
+    lr: 1e-04
+    batch_size: 128
+    grad_accum_steps: 1
+    warmup_ratio: 0.06
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-10_H-512_A-8:
+    lr: 5e-05
+    batch_size: 64
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-10_H-768_A-12:
+    lr: 5e-05
+    batch_size: 32
+    grad_accum_steps: 4
+    warmup_ratio: 0.10
+    label_smoothing: 0.00
+    n_epochs: 3
+    seed: 42
+
+  L-12_H-128_A-2:
+    lr: 3e-04
+    batch_size: 32
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-12_H-256_A-4:
+    lr: 2e-04
+    batch_size: 128
+    grad_accum_steps: 2
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-12_H-512_A-6:
+    lr: 1e-04
+    batch_size: 128
+    grad_accum_steps: 2
+    warmup_ratio: 0.06
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
+
+  L-12_H-768_A-12:
+    lr: 3e-05
+    batch_size: 32
+    grad_accum_steps: 4
+    warmup_ratio: 0.10
+    label_smoothing: 0.05
+    n_epochs: 3
+    seed: 42
